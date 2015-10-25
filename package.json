@@ -1,6 +1,6 @@
 {
   "name": "base-config",
-  "description": "Plugin for base-methods that adds a CLI for all built-in methods, as well as methods added by other plugins.",
+  "description": "base-methods plugin that adds a `config` method for mapping declarative configuration values to other 'base' methods or custom functions.",
   "version": "0.1.0",
   "homepage": "https://github.com/jonschlinkert/base-config",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
@@ -20,12 +20,14 @@
     "test": "mocha"
   },
   "dependencies": {
+    "isobject": "^2.0.0",
     "map-config": "^0.2.1"
   },
   "devDependencies": {
-    "base-data": "^0.3.2",
-    "base-methods": "^0.3.0",
-    "base-options": "^0.4.0",
+    "base-data": "^0.3.3",
+    "base-methods": "^0.3.1",
+    "base-options": "^0.4.2",
+    "base-store": "^0.1.1",
     "data-store": "^0.11.1",
     "expand-args": "^0.2.1",
     "gulp": "^3.9.0",
@@ -37,23 +39,30 @@
     "mocha": "*"
   },
   "keywords": [
+    "app",
     "base",
-    "config",
-    "command-line",
     "baseplugin",
+    "cache",
+    "command",
+    "command-line",
+    "config",
     "data",
     "extend",
+    "line",
     "merge",
+    "method",
     "methods",
-    "plugin"
+    "plugin",
+    "store"
   ],
   "verb": {
     "related": {
       "list": [
         "base-data",
-        "base-plugins",
+        "base-methods",
         "base-options",
-        "base-methods"
+        "base-plugins",
+        "base-store"
       ]
     }
   }
