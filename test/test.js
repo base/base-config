@@ -3,7 +3,7 @@
 require('mocha');
 var assert = require('assert');
 var minimist = require('minimist');
-var store = require('data-store');
+var store = require('base-store');
 var base = require('base-methods');
 var data = require('base-data');
 var option = require('base-options');
@@ -15,44 +15,30 @@ function expand(argv) {
   return expandArgs(minimist(argv));
 }
 
-// app.on('option', function (val, key) {
-//   console.log('option:', val, key);
-// });
-
-// app.store.on('set', function (val, key) {
-//   console.log('set:', val, key);
-// });
-// app.store.on('get', function (val, key) {
-//   console.log('get:', val, key);
-// });
-// app.store.on('del', function (key) {
-//   console.log('deleted:', key);
-// });
-
-// app.on('get', console.log);
-// app.on('has', console.log);
-// app.config.process(expand(argv));
-
-
 describe('config', function () {
   beforeEach(function() {
     app = base();
-    app.use(config);
+    app.use(store('base-config-tests'));
+    app.use(config());
   });
 
   describe('methods', function () {
-    it('should add a "config" object to app:', function () {
+    it('should expose a "config" function on app:', function () {
       assert(app.config);
-      assert(typeof app.config === 'object');
+      assert(typeof app.config === 'function');
     });
 
-    it('should add a "process" method to app.config:', function () {
+    it('should expose a "process" method on app.config:', function () {
       assert(typeof app.config.process === 'function');
+    });
+
+    it('should expose a "map" method on app.config:', function () {
+      assert(typeof app.config.map === 'function');
     });
   });
 
   describe('config mapping', function () {
-    it('should have a config object on app.config', function () {
+    it('should expose the config object from app.config', function () {
       assert(app.config.config);
       assert(typeof app.config.config === 'object');
     });
@@ -67,15 +53,130 @@ describe('config', function () {
       assert(typeof app.config.config.del === 'function');
     });
   });
+
+  describe('map', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(store('base-config-tests'));
+      app.use(config());
+    });
+
+    it('should process an object of flags', function() {
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process({option: {a: 'b'}});
+    });
+
+    it('should be chainable', function(cb) {
+      app.config.alias('a', 'b')
+        .alias('b', 'c')
+        .alias('c', 'set')
+        .map('set')
+
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process({c: {a: 'b'}});
+    });
+
+    it('should add properties to app.config.config', function (cb) {
+      app.config.map('foo', 'set');
+      app.config.map('bar', 'get');
+      var called = 0;
+
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.on('get', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.config.process({set: {a: 'b'}, get: 'a'});
+      assert(called === 2);
+      cb();
+    });
+  });
+
+  describe('store.map', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(store('base-config-tests'));
+      app.use(config());
+    });
+
+    it('should expose `store.config', function () {
+      assert(app.store.config);
+      assert(typeof app.store.config === 'object');
+    });
+
+    it('should not blow up if store plugin is not used', function () {
+      var foo = base();
+      foo.use(config());
+      assert(typeof foo.store === 'undefined');
+    });
+
+    it('should add properties to app.config.config.store', function (cb) {
+      app.store.config.map('foo', 'set');
+      app.store.config.map('bar', 'get');
+      var called = 0;
+
+      app.store.on('set', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.store.on('get', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.store.config.process({set: {a: 'b'}, get: 'a'});
+      assert(called === 2);
+      cb();
+    });
+  });
+
+  describe('process', function() {
+    it('should process an object of flags', function() {
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process({option: {a: 'b'}});
+    });
+  });
 });
 
-describe('special methods', function () {
+describe('should handle methods added by other plugins', function () {
   beforeEach(function() {
     app = base();
-    app.store = store('base-config-test');
+    app.use(store('base-config-tests'));
     app.use(option);
     app.use(data());
-    app.use(config);
+    app.use(config());
   });
 
   afterEach(function() {
@@ -104,10 +205,10 @@ describe('special methods', function () {
 describe('events', function () {
   beforeEach(function() {
     app = base();
-    app.store = store('base-config-test');
+    app.use(store('base-config-tests'));
     app.use(option);
     app.use(data());
-    app.use(config);
+    app.use(config());
   });
 
   afterEach(function() {
@@ -149,7 +250,7 @@ describe('events', function () {
   });
 
   describe('del', function () {
-    it('should ', function (cb) {
+    it('should emit a del event', function (cb) {
       var argv = expand(['--del=a']);
       app.set('a', 'b');
 
@@ -157,6 +258,36 @@ describe('events', function () {
         assert(key);
         assert(key === 'a');
         assert(typeof app.a === 'undefined');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+  });
+
+  describe('option', function () {
+    it('should emit an option event', function (cb) {
+      var argv = expand(['--option=a:b']);
+
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+  });
+
+  describe('data', function () {
+    it('should emit a data event', function (cb) {
+      var argv = expand(['--data=a:b']);
+
+      app.on('data', function(args) {
+        assert(Array.isArray(args));
+        assert(args.length === 1);
+        assert(args[0].a === 'b');
         cb();
       });
 
@@ -194,44 +325,158 @@ describe('events', function () {
       app.config.process(argv);
     });
 
-    it.skip('should emit a store.del event', function (cb) {
+    it('should emit a store.del event', function (cb) {
+      var argv = expand(['--store.del=a,b']);
+      app.store.set('a', 'aaa');
+      app.store.set('b', 'bbb');
+      var keys = [];
+
       app.store.on('del', function(key) {
-        assert(key);
-        cb();
+        keys.push(key);
       });
 
       app.config.process(argv);
+      assert(keys.length === 2);
+      process.nextTick(function () {
+        assert(Object.keys(app.store.data).length === 2);
+      });
+      cb();
     });
 
-    it.skip('should delete the store', function (cb) {
+    it('should delete the entire store', function (cb) {
       var argv = expand(['--store.del=force:true']);
-      app.store.once('del', function () {
+      app.store.set('a', 'aaa');
+      app.store.set('b', 'bbb');
+      var keys = [];
+
+      app.store.on('del', function(key) {
+        keys.push(key);
+      });
+
+      app.config.process(argv);
+      assert(keys.length === 2);
+      process.nextTick(function () {
+        assert(Object.keys(app.store.data).length === 0);
+      });
+      cb();
+    });
+  });
+});
+
+describe('aliases', function () {
+  beforeEach(function() {
+    app = base();
+    app.use(store('base-config-tests'));
+    app.use(option);
+    app.use(data());
+    app.use(config());
+  });
+
+  afterEach(function() {
+    app.store.del({force: true});
+  });
+
+  describe('config', function () {
+    it('should map an object to methods', function (cb) {
+      var argv = expand(['--set=a:b']);
+      app.config({
+        set: 'set'
+      });
+
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(val);
+        assert(app.a === 'b');
+        assert(key === 'a');
+        assert(val === 'b');
         cb();
       });
 
       app.config.process(argv);
     });
-  });
 
-  describe.skip('option', function () {
-    it('should emit an option event', function (cb) {
-      app.on('option', function(key) {
+    it('should use custom functions', function (cb) {
+      var argv = expand(['--foo=a:b']);
+      app.config({
+        set: 'set',
+        foo: function (key, val) {
+          app.set(key, val);
+        }
+      });
+
+      app.on('set', function(key, val) {
         assert(key);
+        assert(val);
+        assert(app.a === 'b');
+        assert(key === 'a');
+        assert(val === 'b');
         cb();
       });
 
       app.config.process(argv);
     });
-  });
 
-  describe.skip('data', function () {
-    it('should emit a data event', function (cb) {
-      app.on('data', function(key) {
+    it('should use alias mappings', function (cb) {
+      var argv = expand(['--foo=a:b']);
+      app.config({
+        set: 'set',
+        foo: 'set'
+      });
+
+      app.on('set', function(key, val) {
         assert(key);
+        assert(val);
+        assert(app.a === 'b');
+        assert(key === 'a');
+        assert(val === 'b');
         cb();
       });
 
       app.config.process(argv);
+    });
+
+    it('should expose config.map', function (cb) {
+      var argv = expand(['--set=a:b']);
+      app.config.map('set');
+
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(val);
+        assert(app.a === 'b');
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+
+    it('should expose config.alias', function (cb) {
+      var argv = expand(['--set=a:b']);
+      app.config.alias('foo', 'set');
+
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(val);
+        assert(app.a === 'b');
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+
+    it('should throw if args are invalid', function (cb) {
+      try {
+        app.config([]);
+        cb(new Error('expected an error'));
+      } catch(err) {
+        assert(err);
+        assert(err.message);
+        assert(err.message === 'expected key to be a string or object');
+        cb();
+      }
     });
   });
 });
