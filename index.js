@@ -7,55 +7,78 @@
 
 'use strict';
 
-var map = require('map-config');
+var mapper = require('map-config');
+var isObject = require('isobject');
 
-module.exports = function(method) {
-  method || (method = 'config');
-
-  return function plugin(app) {
-    var mapper = map(app);
-    var fn = store(app.store);
-    console.log(fn.process)
-    mapper.alias('show', 'get')
-      // .map('store', store(app.store))
-      .map('store', fn)
-      .map('option')
+module.exports = function() {
+  return function(app) {
+    var config = mapper(app)
       .map('data')
+      .map('store', store(app.store))
+      .map('option')
+      .map('enable')
+      .map('enabled')
+      .map('disable')
+      .map('disabled')
       .map('set')
       .map('del')
       .map('get')
       .map('has');
 
-    app.mixin(method, proxy(mapper));
-    return app;
+    app.define('config', proxy(config));
   };
 
   function store(app) {
-    var config = map(app)
-      .alias('show', 'get')
+    if (!app) return {};
+    var config = mapper(app)
       .map('set')
       .map('del')
       .map('has')
       .map('get');
 
+    app.define('config', config);
     return function(argv) {
       config.process(argv);
     };
   }
 };
 
-function proxy(mapper) {
-  function config(key, value) {
-    if (typeof key === 'string') {
-      mapper.map.apply(mapper, arguments);
+/**
+ * Proxy to support config as a function and object
+ * with methods, allowing the user to do either of
+ * the following:
+ *
+ * ```js
+ * base.config({
+ *   foo: 'bar'
+ * });
+ *
+ * // or
+ * base.config.map('foo', 'bar');
+ * ```
+ */
 
-    } else if (key && typeof key === 'object') {
-      for (var prop in key) {
-        config(prop, key[prop]);
-      }
+function proxy(config) {
+  function fn(key, val) {
+    if (typeof val === 'string') {
+      config.alias.apply(config, arguments);
+      return config;
     }
-    return mapper;
+
+    if (typeof key === 'string') {
+      config.map.apply(config, arguments);
+      return config;
+    }
+
+    if (!isObject(key)) {
+      throw new TypeError('expected key to be a string or object');
+    }
+
+    for (var prop in key) {
+      fn(prop, key[prop]);
+    }
+    return config;
   }
-  config.__proto__ = mapper;
-  return config;
+  fn.__proto__ = config;
+  return fn;
 }
