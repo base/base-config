@@ -72,6 +72,36 @@ describe('config', function () {
       app.config.process({option: {a: 'b'}});
     });
 
+    it('should process an object passed to config', function() {
+      app = base();
+      app.use(store('base-config-tests'));
+      app.use(config({option: {a: 'b'}}));
+
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process();
+    });
+
+    it('should process an array passed to config', function() {
+      app = base();
+      app.use(store('base-config-tests'));
+      app.use(config([{option: {a: 'b'}}]));
+
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process();
+    });
+
     it('should be chainable', function(cb) {
       app.config.alias('a', 'b')
         .alias('b', 'c')
@@ -122,7 +152,7 @@ describe('config', function () {
 
     it('should expose `store.config', function () {
       assert(app.store.config);
-      assert(typeof app.store.config === 'object');
+      assert(typeof app.store.config === 'function');
     });
 
     it('should not blow up if store plugin is not used', function () {
@@ -131,9 +161,9 @@ describe('config', function () {
       assert(typeof foo.store === 'undefined');
     });
 
-    it('should add properties to app.config.config.store', function (cb) {
-      app.store.config.map('foo', 'set');
-      app.store.config.map('bar', 'get');
+    it('should add properties to app.store.config.config', function (cb) {
+      app.store.config.alias('foo', 'set');
+      app.store.config.alias('bar', 'get');
       var called = 0;
 
       app.store.on('set', function(key, val) {
@@ -150,7 +180,34 @@ describe('config', function () {
         called++;
       });
 
-      app.store.config.process({set: {a: 'b'}, get: 'a'});
+      app.store.config.process({foo: {a: 'b'}, bar: 'a'});
+      assert(called === 2);
+      cb();
+    });
+
+    it('should work as a function', function (cb) {
+      app.store.config({
+        foo: 'set',
+        bar: 'get'
+      });
+
+      var called = 0;
+
+      app.store.on('set', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.store.on('get', function(key, val) {
+        assert(key);
+        assert(key === 'a');
+        assert(val === 'b');
+        called++;
+      });
+
+      app.store.config.process({foo: {a: 'b'}, bar: 'a'});
       assert(called === 2);
       cb();
     });

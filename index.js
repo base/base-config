@@ -10,7 +10,7 @@
 var mapper = require('map-config');
 var isObject = require('isobject');
 
-module.exports = function() {
+module.exports = function(args) {
   return function(app) {
     var config = mapper(app)
       .map('data')
@@ -20,12 +20,21 @@ module.exports = function() {
       .map('enabled')
       .map('disable')
       .map('disabled')
+      .map('define')
       .map('set')
       .map('del')
       .map('get')
       .map('has');
 
     app.define('config', proxy(config));
+
+    app.config.process = function (val) {
+      args = arrayify(args);
+      if (val) args = args.concat(val);
+      args.forEach(function(arg) {
+        config.process(arg);
+      });
+    };
   };
 
   function store(app) {
@@ -36,7 +45,7 @@ module.exports = function() {
       .map('has')
       .map('get');
 
-    app.define('config', config);
+    app.define('config', proxy(config));
     return function(argv) {
       config.process(argv);
     };
@@ -81,4 +90,8 @@ function proxy(config) {
   }
   fn.__proto__ = config;
   return fn;
+}
+
+function arrayify(val) {
+  return Array.isArray(val) ? val : [val];
 }
