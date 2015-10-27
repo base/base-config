@@ -54,6 +54,67 @@ describe('config', function () {
     });
   });
 
+  describe('use', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(store('base-config-tests'));
+      app.use(config());
+    });
+
+    it('should use a plugin', function(cb) {
+      app.on('use', function(key, val) {
+        assert(key === 'test/fixtures/plugins/a');
+        cb();
+      });
+
+      app.config.process({use: 'test/fixtures/plugins/a'});
+    });
+
+    it('should use a plugin from a cwd', function(cb) {
+      app.on('use', function(key, val) {
+        console.log(key)
+        assert(key === 'a');
+        cb();
+      });
+
+      app.config.process({
+        cwd: 'test/fixtures/plugins',
+        use: 'a'
+      });
+    });
+
+    it('should throw an error when plugin is not found', function(cb) {
+      try {
+        app.config.process({
+          cwd: 'test/fixtures/plugins',
+          use: 'd'
+        });
+        assert(new Error('expected an error'));
+      } catch(err) {
+        assert(err);
+        assert(err.message);
+        assert(err.message === 'cannot find plugin: d');
+        cb();
+      }
+    });
+
+    it('should use an array of plugins from a cwd', function(cb) {
+      var keys = [];
+      app.on('use', function(key, val) {
+        keys.push(key);
+      });
+
+      app.config.process({
+        cwd: 'test/fixtures/plugins',
+        use: 'a,b,c'
+      });
+
+      assert(keys.length === 3);
+      assert.deepEqual(keys, ['a', 'b', 'c']);
+      cb();
+    });
+  });
+
   describe('map', function() {
     beforeEach(function() {
       app = base();
