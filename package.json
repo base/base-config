@@ -1,7 +1,7 @@
 {
   "name": "base-config",
   "description": "base-methods plugin that adds a `config` method for mapping declarative configuration values to other 'base' methods or custom functions.",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "homepage": "https://github.com/jonschlinkert/base-config",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
   "repository": "jonschlinkert/base-config",
@@ -10,7 +10,8 @@
   },
   "license": "MIT",
   "files": [
-    "index.js"
+    "index.js",
+    "utils.js"
   ],
   "main": "index.js",
   "engines": {
@@ -21,14 +22,16 @@
   },
   "dependencies": {
     "isobject": "^2.0.0",
-    "map-config": "^0.2.1"
+    "lazy-cache": "^0.2.4",
+    "map-config": "^0.2.1",
+    "resolve-dir": "^0.1.0"
   },
   "devDependencies": {
     "base-data": "^0.3.3",
     "base-methods": "^0.3.1",
     "base-options": "^0.4.2",
+    "base-plugins": "^0.3.0",
     "base-store": "^0.1.1",
-    "data-store": "^0.11.1",
     "expand-args": "^0.2.1",
     "gulp": "^3.9.0",
     "gulp-istanbul": "^0.10.2",
