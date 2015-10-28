@@ -6,7 +6,8 @@ var minimist = require('minimist');
 var store = require('base-store');
 var base = require('base-methods');
 var data = require('base-data');
-var option = require('base-options');
+var plugins = require('base-plugins');
+var options = require('base-options');
 var expandArgs = require('expand-args');
 var config = require('..');
 var app;
@@ -18,6 +19,8 @@ function expand(argv) {
 describe('config', function () {
   beforeEach(function() {
     app = base();
+    app.use(plugins);
+    app.use(options);
     app.use(store('base-config-tests'));
     app.use(config());
   });
@@ -54,16 +57,37 @@ describe('config', function () {
     });
   });
 
+  describe('cwd', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(plugins);
+      app.use(store('base-config-tests'));
+      app.use(config());
+    });
+
+    it('should set a cwd on app', function(cb) {
+      app.on('set', function(key, val) {
+        assert(key);
+        assert(key === 'cwd');
+        assert(val === process.cwd());
+        cb();
+      });
+
+      app.config.process({cwd: process.cwd()});
+    });
+  });
+
   describe('use', function() {
     beforeEach(function() {
       app = base();
+      app.use(plugins);
+      app.use(options);
       app.use(store('base-config-tests'));
       app.use(config());
     });
 
     it('should use a plugin', function(cb) {
-      app.on('use', function(key, val) {
-        assert(key === 'test/fixtures/plugins/a');
+      app.on('use', function() {
         cb();
       });
 
@@ -72,8 +96,6 @@ describe('config', function () {
 
     it('should use a plugin from a cwd', function(cb) {
       app.on('use', function(key, val) {
-        console.log(key)
-        assert(key === 'a');
         cb();
       });
 
@@ -93,15 +115,15 @@ describe('config', function () {
       } catch(err) {
         assert(err);
         assert(err.message);
-        assert(err.message === 'cannot find plugin: d');
+        assert(/cannot find/.test(err.message));
         cb();
       }
     });
 
     it('should use an array of plugins from a cwd', function(cb) {
-      var keys = [];
-      app.on('use', function(key, val) {
-        keys.push(key);
+      var n = 0;
+      app.on('use', function() {
+        n++;
       });
 
       app.config.process({
@@ -109,8 +131,7 @@ describe('config', function () {
         use: 'a,b,c'
       });
 
-      assert(keys.length === 3);
-      assert.deepEqual(keys, ['a', 'b', 'c']);
+      assert(n === 3);
       cb();
     });
   });
@@ -118,11 +139,13 @@ describe('config', function () {
   describe('map', function() {
     beforeEach(function() {
       app = base();
+      app.use(plugins);
+      app.use(options);
       app.use(store('base-config-tests'));
       app.use(config());
     });
 
-    it('should process an object of flags', function() {
+    it('should process an object of flags', function(cb) {
       app.on('option', function(key, val) {
         assert(key);
         assert(key === 'a');
@@ -133,8 +156,10 @@ describe('config', function () {
       app.config.process({option: {a: 'b'}});
     });
 
-    it('should process an object passed to config', function() {
+    it('should process an object passed to config', function(cb) {
       app = base();
+      app.use(plugins);
+      app.use(options);
       app.use(store('base-config-tests'));
       app.use(config({option: {a: 'b'}}));
 
@@ -148,8 +173,10 @@ describe('config', function () {
       app.config.process();
     });
 
-    it('should process an array passed to config', function() {
+    it('should process an array passed to config', function(cb) {
       app = base();
+      app.use(plugins);
+      app.use(options);
       app.use(store('base-config-tests'));
       app.use(config([{option: {a: 'b'}}]));
 
@@ -207,6 +234,8 @@ describe('config', function () {
   describe('store.map', function() {
     beforeEach(function() {
       app = base();
+      app.use(plugins);
+      app.use(options);
       app.use(store('base-config-tests'));
       app.use(config());
     });
@@ -275,7 +304,7 @@ describe('config', function () {
   });
 
   describe('process', function() {
-    it('should process an object of flags', function() {
+    it('should process an object of flags', function(cb) {
       app.on('option', function(key, val) {
         assert(key);
         assert(key === 'a');
@@ -291,9 +320,10 @@ describe('config', function () {
 describe('should handle methods added by other plugins', function () {
   beforeEach(function() {
     app = base();
-    app.use(store('base-config-tests'));
-    app.use(option);
+    app.use(plugins);
+    app.use(options);
     app.use(data());
+    app.use(store('base-config-tests'));
     app.use(config());
   });
 
@@ -323,8 +353,9 @@ describe('should handle methods added by other plugins', function () {
 describe('events', function () {
   beforeEach(function() {
     app = base();
+    app.use(plugins);
+    app.use(options);
     app.use(store('base-config-tests'));
-    app.use(option);
     app.use(data());
     app.use(config());
   });
@@ -364,6 +395,57 @@ describe('events', function () {
       });
 
       app.config.process(argv);
+    });
+
+    it('should emit multiple get events', function (cb) {
+      var argv = expand(['--get=a,b,c']);
+      app.set('a', 'aaa');
+      app.set('b', 'bbb');
+      app.set('c', 'ccc');
+      var keys = [];
+
+      app.on('get', function(key, val) {
+        if (key === 'a') assert(val === 'aaa');
+        if (key === 'b') assert(val === 'bbb');
+        if (key === 'c') assert(val === 'ccc');
+        keys.push(key);
+      });
+
+      app.config.process(argv);
+      assert(keys.length === 3);
+      cb();
+    });
+  });
+
+  describe('has', function () {
+    it('should emit a has event', function (cb) {
+      var argv = expand(['--has=a']);
+      app.set('a', 'b');
+
+      app.on('has', function(key, val) {
+        assert(key === 'a');
+        assert(val === true)
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+
+    it('should emit multiple has events', function (cb) {
+      var argv = expand(['--has=a,b,c']);
+      app.set('a', 'aaa');
+      app.set('b', 'bbb');
+      app.set('c', 'ccc');
+      var keys = [];
+
+      app.on('has', function(key, val) {
+        assert(val === true);
+        keys.push(key);
+      });
+
+      app.config.process(argv);
+      assert(keys.length === 3);
+      cb();
     });
   });
 
@@ -484,14 +566,47 @@ describe('events', function () {
 describe('aliases', function () {
   beforeEach(function() {
     app = base();
+    app.use(plugins);
+    app.use(options);
     app.use(store('base-config-tests'));
-    app.use(option);
     app.use(data());
     app.use(config());
   });
 
   afterEach(function() {
     app.store.del({force: true});
+  });
+
+  describe('options', function () {
+    it('should emit an option event', function (cb) {
+      var argv = expand(['--options=a:b']);
+
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(val);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
+  });
+
+  describe('option', function () {
+    it('should emit an option event', function (cb) {
+      var argv = expand(['--option=a:b']);
+
+      app.on('option', function(key, val) {
+        assert(key);
+        assert(val);
+        assert(key === 'a');
+        assert(val === 'b');
+        cb();
+      });
+
+      app.config.process(argv);
+    });
   });
 
   describe('config', function () {
