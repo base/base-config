@@ -7,10 +7,31 @@
 
 'use strict';
 
-var path = require('path');
 var utils = require('./utils');
 
+/**
+ * Expose `config`
+ */
+
 module.exports = function(args) {
+  return create('config', args);
+};
+
+/**
+ * Create a function for mapping `app` properties onto the
+ * given `prop` namespace.
+ *
+ * @param {String} `prop` The namespace to use
+ * @param {Object} `argv`
+ * @return {Object}
+ * @api public
+ */
+
+function create(prop, args) {
+  if (typeof prop !== 'string') {
+    throw new Error('expected the first argument to be a string.');
+  }
+
   return function(app) {
     var config = utils.mapper(app)
       .alias('options', 'option')
@@ -28,27 +49,44 @@ module.exports = function(args) {
         app.set('cwd', fp);
       })
       .map('has', function(prop) {
-        arrayify(prop).forEach(function (key) {
+        utils.arrayify(prop).forEach(function (key) {
           app.has(key);
         });
       })
       .map('get', function(prop) {
-        arrayify(prop).forEach(function (key) {
+        utils.arrayify(prop).forEach(function (key) {
           app.get(key);
         });
       })
       .map('use', function(names) {
-        arrayify(names).forEach(function (name) {
+        utils.arrayify(names).forEach(function (name) {
           var cwd = app.get('cwd') || process.cwd();
-          app.use(tryRequire(name, cwd));
+          app.use(utils.tryRequire(name, cwd));
         });
       });
 
-    app.define('config', proxy(config));
+    app.define(prop, proxy(config));
 
-    app.config.process = function (val) {
-      args = arrayify(args);
-      if (val) args = args.concat(val);
+    /**
+     * Create wildcard emitter
+     */
+
+    app[prop].keys.forEach(function(name) {
+      app.on(name, function(key, val) {
+        app.emit('*', name, key, val);
+      });
+    });
+
+    if (app.store) {
+      app.store[prop].keys.forEach(function(name) {
+        app.store.on(name, function(key, val) {
+          app.emit('*', 'store.' + name, key, val);
+        });
+      });
+    }
+
+    app[prop].process = function (val) {
+      args = utils.arrayify(args).concat(val || []);
       args.forEach(function(arg) {
         config.process(arg);
       });
@@ -64,12 +102,12 @@ module.exports = function(args) {
       .map('hasOwn')
       .map('get');
 
-    app.define('config', proxy(config));
+    app.define(prop, proxy(config));
     return function(argv) {
       config.process(argv);
     };
   }
-};
+}
 
 /**
  * Proxy to support `app.config` as a function or object
@@ -110,48 +148,7 @@ function proxy(config) {
 }
 
 /**
- * Cast the given value to an array
+ * Expose `create`
  */
 
-function arrayify(val) {
-  if (typeof val === 'string') {
-    return val.split(',');
-  }
-  return Array.isArray(val) ? val : [val];
-}
-
-/**
- * Try to require the given module
- * or file path.
- */
-
-function tryRequire(name, cwd) {
-  name = utils.resolve(name);
-  var attempts = [name], fp;
-
-  try {
-    return require(name);
-  } catch(err) {}
-
-  try {
-    fp = path.resolve(name);
-    attempts.push(fp);
-    return require(fp);
-  } catch(err) {}
-
-  try {
-    fp = path.resolve(utils.resolve(cwd), name);
-    attempts.push(fp);
-    return require(fp);
-  } catch(err) {}
-
-  throw new Error('cannot find plugin at: \n' + format(attempts));
-}
-
-function format(arr) {
-  var res = '';
-  arr.forEach(function (ele) {
-    res += ' ✖ \'' + ele + '\'' + '\n';
-  });
-  return res;
-}
+module.exports.create = create;
