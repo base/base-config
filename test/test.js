@@ -16,43 +16,42 @@ function expand(argv) {
   return expandArgs(minimist(argv));
 }
 
-describe('config', function () {
+describe('config', function() {
   beforeEach(function() {
     app = base();
-    app.use(plugins);
-    app.use(options);
+    app.use(plugins());
     app.use(store('base-config-tests'));
     app.use(config());
   });
 
-  describe('methods', function () {
-    it('should expose a "config" function on app:', function () {
+  describe('methods', function() {
+    it('should expose a "config" function on app:', function() {
       assert(app.config);
       assert(typeof app.config === 'function');
     });
 
-    it('should expose a "process" method on app.config:', function () {
+    it('should expose a "process" method on app.config:', function() {
       assert(typeof app.config.process === 'function');
     });
 
-    it('should expose a "map" method on app.config:', function () {
+    it('should expose a "map" method on app.config:', function() {
       assert(typeof app.config.map === 'function');
     });
   });
 
-  describe('config mapping', function () {
-    it('should expose the config object from app.config', function () {
+  describe('config mapping', function() {
+    it('should expose the config object from app.config', function() {
       assert(app.config.config);
       assert(typeof app.config.config === 'object');
     });
 
-    it('should add a set method to config', function () {
+    it('should add a set method to config', function() {
       assert(typeof app.config.config.set === 'function');
     });
-    it('should add a get method to config', function () {
+    it('should add a get method to config', function() {
       assert(typeof app.config.config.get === 'function');
     });
-    it('should add a del method to config', function () {
+    it('should add a del method to config', function() {
       assert(typeof app.config.config.del === 'function');
     });
   });
@@ -60,7 +59,7 @@ describe('config', function () {
   describe('cwd', function() {
     beforeEach(function() {
       app = base();
-      app.use(plugins);
+      app.use(plugins());
       app.use(store('base-config-tests'));
       app.use(config());
     });
@@ -73,46 +72,52 @@ describe('config', function () {
         cb();
       });
 
-      app.config.process({cwd: process.cwd()});
+      app.config.process({
+        cwd: process.cwd()
+      });
     });
   });
 
   describe('use', function() {
     beforeEach(function() {
       app = base();
-      app.use(plugins);
-      app.use(options);
+      app.use(plugins());
       app.use(store('base-config-tests'));
       app.use(config());
     });
 
     it('should use a plugin', function(cb) {
-      app.on('use', function() {
+      app.once('use', function() {
         cb();
       });
 
-      app.config.process({use: 'test/fixtures/plugins/a'});
+      app.config.process({
+        use: 'test/fixtures/plugins/a'
+      });
     });
 
     it('should use a plugin from a cwd', function(cb) {
+      var n = 0;
       app.on('use', function(key, val) {
-        cb();
+        n++;
       });
 
       app.config.process({
         cwd: 'test/fixtures/plugins',
         use: 'a'
       });
+      assert(n === 1);
+      cb();
     });
 
     it('should throw an error when plugin is not found', function(cb) {
       try {
         app.config.process({
           cwd: 'test/fixtures/plugins',
-          use: 'd'
+          use: 'dddd'
         });
         assert(new Error('expected an error'));
-      } catch(err) {
+      } catch (err) {
         assert(err);
         assert(err.message);
         assert(/cannot find/.test(err.message));
@@ -139,8 +144,8 @@ describe('config', function () {
   describe('map', function() {
     beforeEach(function() {
       app = base();
-      app.use(plugins);
-      app.use(options);
+      app.use(plugins());
+      app.use(options());
       app.use(store('base-config-tests'));
       app.use(config());
     });
@@ -153,15 +158,23 @@ describe('config', function () {
         cb();
       });
 
-      app.config.process({option: {a: 'b'}});
+      app.config.process({
+        option: {
+          a: 'b'
+        }
+      });
     });
 
     it('should process an object passed to config', function(cb) {
       app = base();
-      app.use(plugins);
-      app.use(options);
+      app.use(plugins());
+      app.use(options());
       app.use(store('base-config-tests'));
-      app.use(config({option: {a: 'b'}}));
+      app.use(config({
+        option: {
+          a: 'b'
+        }
+      }));
 
       app.on('option', function(key, val) {
         assert(key);
@@ -175,10 +188,14 @@ describe('config', function () {
 
     it('should process an array passed to config', function(cb) {
       app = base();
-      app.use(plugins);
-      app.use(options);
+      app.use(plugins());
+      app.use(options());
       app.use(store('base-config-tests'));
-      app.use(config([{option: {a: 'b'}}]));
+      app.use(config([{
+        option: {
+          a: 'b'
+        }
+      }]));
 
       app.on('option', function(key, val) {
         assert(key);
@@ -203,10 +220,14 @@ describe('config', function () {
         cb();
       });
 
-      app.config.process({c: {a: 'b'}});
+      app.config.process({
+        c: {
+          a: 'b'
+        }
+      });
     });
 
-    it('should add properties to app.config.config', function (cb) {
+    it('should add properties to app.config.config', function(cb) {
       app.config.map('foo', 'set');
       app.config.map('bar', 'get');
       var called = 0;
@@ -225,7 +246,12 @@ describe('config', function () {
         called++;
       });
 
-      app.config.process({set: {a: 'b'}, get: 'a'});
+      app.config.process({
+        set: {
+          a: 'b'
+        },
+        get: 'a'
+      });
       assert(called === 2);
       cb();
     });
@@ -234,24 +260,24 @@ describe('config', function () {
   describe('store.map', function() {
     beforeEach(function() {
       app = base();
-      app.use(plugins);
-      app.use(options);
+      app.use(plugins());
+      app.use(options());
       app.use(store('base-config-tests'));
       app.use(config());
     });
 
-    it('should expose `store.config', function () {
+    it('should expose `store.config', function() {
       assert(app.store.config);
       assert(typeof app.store.config === 'function');
     });
 
-    it('should not blow up if store plugin is not used', function () {
+    it('should not blow up if store plugin is not used', function() {
       var foo = base();
       foo.use(config());
       assert(typeof foo.store === 'undefined');
     });
 
-    it('should add properties to app.store.config.config', function (cb) {
+    it('should add properties to app.store.config.config', function(cb) {
       app.store.config.alias('foo', 'set');
       app.store.config.alias('bar', 'get');
       var called = 0;
@@ -270,12 +296,17 @@ describe('config', function () {
         called++;
       });
 
-      app.store.config.process({foo: {a: 'b'}, bar: 'a'});
+      app.store.config.process({
+        foo: {
+          a: 'b'
+        },
+        bar: 'a'
+      });
       assert(called === 2);
       cb();
     });
 
-    it('should work as a function', function (cb) {
+    it('should work as a function', function(cb) {
       app.store.config({
         foo: 'set',
         bar: 'get'
@@ -297,7 +328,12 @@ describe('config', function () {
         called++;
       });
 
-      app.store.config.process({foo: {a: 'b'}, bar: 'a'});
+      app.store.config.process({
+        foo: {
+          a: 'b'
+        },
+        bar: 'a'
+      });
       assert(called === 2);
       cb();
     });
@@ -305,67 +341,75 @@ describe('config', function () {
 
   describe('process', function() {
     it('should process an object of flags', function(cb) {
-      app.on('option', function(key, val) {
+      app.on('set', function(key, val) {
         assert(key);
         assert(key === 'a');
         assert(val === 'b');
         cb();
       });
 
-      app.config.process({option: {a: 'b'}});
+      app.config.process({
+        set: {
+          a: 'b'
+        }
+      });
     });
   });
 });
 
-describe('should handle methods added by other plugins', function () {
+describe('should handle methods added by other plugins', function() {
   beforeEach(function() {
     app = base();
-    app.use(plugins);
-    app.use(options);
-    app.use(data());
+    app.use(plugins());
+    app.use(options());
     app.use(store('base-config-tests'));
+    app.use(data());
     app.use(config());
   });
 
   afterEach(function() {
-    app.store.del({force: true});
+    app.store.del({
+      force: true
+    });
   });
 
-  describe('store', function () {
-    it('should add a store method to config', function () {
+  describe('store', function() {
+    it('should add a store method to config', function() {
       assert(typeof app.config.config.store === 'function');
     });
   });
 
-  describe('option', function () {
-    it('should add an option method to config', function () {
+  describe('option', function() {
+    it('should add an option method to config', function() {
       assert(typeof app.config.config.option === 'function');
     });
   });
 
-  describe('data', function () {
-    it('should add a data method to config', function () {
+  describe('data', function() {
+    it('should add a data method to config', function() {
       assert(typeof app.config.config.data === 'function');
     });
   });
 });
 
-describe('events', function () {
+describe('events', function() {
   beforeEach(function() {
     app = base();
-    app.use(plugins);
-    app.use(options);
+    app.use(plugins());
+    app.use(options());
     app.use(store('base-config-tests'));
     app.use(data());
     app.use(config());
   });
 
   afterEach(function() {
-    app.store.del({force: true});
+    app.store.del({
+      force: true
+    });
   });
 
-  describe('set', function () {
-    it('should emit a set event', function (cb) {
+  describe('set', function() {
+    it('should emit a set event', function(cb) {
       var argv = expand(['--set=a:b']);
 
       app.on('set', function(key, val) {
@@ -381,8 +425,8 @@ describe('events', function () {
     });
   });
 
-  describe('get', function () {
-    it('should emit a get event', function (cb) {
+  describe('get', function() {
+    it('should emit a get event', function(cb) {
       var argv = expand(['--get=a']);
       app.set('a', 'b');
 
@@ -397,7 +441,7 @@ describe('events', function () {
       app.config.process(argv);
     });
 
-    it('should emit multiple get events', function (cb) {
+    it('should emit multiple get events', function(cb) {
       var argv = expand(['--get=a,b,c']);
       app.set('a', 'aaa');
       app.set('b', 'bbb');
@@ -417,8 +461,8 @@ describe('events', function () {
     });
   });
 
-  describe('has', function () {
-    it('should emit a has event', function (cb) {
+  describe('has', function() {
+    it('should emit a has event', function(cb) {
       var argv = expand(['--has=a']);
       app.set('a', 'b');
 
@@ -431,7 +475,7 @@ describe('events', function () {
       app.config.process(argv);
     });
 
-    it('should emit multiple has events', function (cb) {
+    it('should emit multiple has events', function(cb) {
       var argv = expand(['--has=a,b,c']);
       app.set('a', 'aaa');
       app.set('b', 'bbb');
@@ -449,8 +493,8 @@ describe('events', function () {
     });
   });
 
-  describe('del', function () {
-    it('should emit a del event', function (cb) {
+  describe('del', function() {
+    it('should emit a del event', function(cb) {
       var argv = expand(['--del=a']);
       app.set('a', 'b');
 
@@ -465,8 +509,8 @@ describe('events', function () {
     });
   });
 
-  describe('option', function () {
-    it('should emit an option event', function (cb) {
+  describe('option', function() {
+    it('should emit an option event', function(cb) {
       var argv = expand(['--option=a:b']);
 
       app.on('option', function(key, val) {
@@ -480,8 +524,8 @@ describe('events', function () {
     });
   });
 
-  describe('data', function () {
-    it('should emit a data event', function (cb) {
+  describe('data', function() {
+    it('should emit a data event', function(cb) {
       var argv = expand(['--data=a:b']);
 
       app.on('data', function(args) {
@@ -495,8 +539,8 @@ describe('events', function () {
     });
   });
 
-  describe('store', function () {
-    it('should emit a store.set event', function (cb) {
+  describe('store', function() {
+    it('should emit a store.set event', function(cb) {
       var argv = expand(['--store.set=a:b']);
       app.store.on('set', function(key, val) {
         assert(key);
@@ -510,7 +554,7 @@ describe('events', function () {
       app.config.process(argv);
     });
 
-    it('should emit a store.get event', function (cb) {
+    it('should emit a store.get event', function(cb) {
       var argv = expand(['--store.get=a']);
       app.store.set('a', 'b');
 
@@ -525,7 +569,7 @@ describe('events', function () {
       app.config.process(argv);
     });
 
-    it('should emit a store.del event', function (cb) {
+    it('should emit a store.del event', function(cb) {
       var argv = expand(['--store.del=a,b']);
       app.store.set('a', 'aaa');
       app.store.set('b', 'bbb');
@@ -537,13 +581,13 @@ describe('events', function () {
 
       app.config.process(argv);
       assert(keys.length === 2);
-      process.nextTick(function () {
+      process.nextTick(function() {
         assert(Object.keys(app.store.data).length === 2);
       });
       cb();
     });
 
-    it('should delete the entire store', function (cb) {
+    it('should delete the entire store', function(cb) {
       var argv = expand(['--store.del=force:true']);
       app.store.set('a', 'aaa');
       app.store.set('b', 'bbb');
@@ -555,30 +599,56 @@ describe('events', function () {
 
       app.config.process(argv);
       assert(keys.length === 2);
-      process.nextTick(function () {
+      process.nextTick(function() {
         assert(Object.keys(app.store.data).length === 0);
       });
       cb();
     });
   });
+
+  describe('wildcard', function() {
+    it('should emit the wildcard event for "set"', function(cb) {
+      app.once('*', function(name, key, val) {
+        assert.equal(name, 'set');
+        assert.equal(key, 'x');
+        assert.equal(val, 'y');
+        cb();
+      });
+
+      app.set('x', 'y');
+    });
+
+    it('should emit the wildcard event for "store.set"', function(cb) {
+      app.once('*', function(name, key, val) {
+        assert.equal(name, 'store.set');
+        assert.equal(key, 'x');
+        assert.equal(val, 'y');
+        cb();
+      });
+
+      app.store.set('x', 'y');
+    });
+  });
 });
 
-describe('aliases', function () {
+describe('aliases', function() {
   beforeEach(function() {
     app = base();
-    app.use(plugins);
-    app.use(options);
+    app.use(plugins());
+    app.use(options());
     app.use(store('base-config-tests'));
     app.use(data());
     app.use(config());
   });
 
   afterEach(function() {
-    app.store.del({force: true});
+    app.store.del({
+      force: true
+    });
   });
 
-  describe('options', function () {
-    it('should emit an option event', function (cb) {
+  describe('options', function() {
+    it('should emit an option event', function(cb) {
       var argv = expand(['--options=a:b']);
 
       app.on('option', function(key, val) {
@@ -593,8 +663,8 @@ describe('aliases', function () {
     });
   });
 
-  describe('option', function () {
-    it('should emit an option event', function (cb) {
+  describe('option', function() {
+    it('should emit an option event', function(cb) {
       var argv = expand(['--option=a:b']);
 
       app.on('option', function(key, val) {
@@ -609,8 +679,23 @@ describe('aliases', function () {
     });
   });
 
-  describe('config', function () {
-    it('should map an object to methods', function (cb) {
+  describe('config', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(plugins());
+      app.use(options());
+      app.use(store('base-config-tests'));
+      app.use(data());
+      app.use(config());
+    });
+
+    afterEach(function() {
+      app.store.del({
+        force: true
+      });
+    });
+
+    it('should map an object to methods', function(cb) {
       var argv = expand(['--set=a:b']);
       app.config({
         set: 'set'
@@ -628,11 +713,11 @@ describe('aliases', function () {
       app.config.process(argv);
     });
 
-    it('should use custom functions', function (cb) {
+    it('should use custom functions', function(cb) {
       var argv = expand(['--foo=a:b']);
       app.config({
         set: 'set',
-        foo: function (key, val) {
+        foo: function(key, val) {
           app.set(key, val);
         }
       });
@@ -649,7 +734,7 @@ describe('aliases', function () {
       app.config.process(argv);
     });
 
-    it('should use alias mappings', function (cb) {
+    it('should use alias mappings', function(cb) {
       var argv = expand(['--foo=a:b']);
       app.config({
         set: 'set',
@@ -668,7 +753,7 @@ describe('aliases', function () {
       app.config.process(argv);
     });
 
-    it('should expose config.map', function (cb) {
+    it('should expose config.map', function(cb) {
       var argv = expand(['--set=a:b']);
       app.config.map('set');
 
@@ -684,7 +769,7 @@ describe('aliases', function () {
       app.config.process(argv);
     });
 
-    it('should expose config.alias', function (cb) {
+    it('should expose config.alias', function(cb) {
       var argv = expand(['--set=a:b']);
       app.config.alias('foo', 'set');
 
@@ -700,11 +785,11 @@ describe('aliases', function () {
       app.config.process(argv);
     });
 
-    it('should throw if args are invalid', function (cb) {
+    it('should throw if args are invalid', function(cb) {
       try {
         app.config([]);
         cb(new Error('expected an error'));
-      } catch(err) {
+      } catch (err) {
         assert(err);
         assert(err.message);
         assert(err.message === 'expected key to be a string or object');
