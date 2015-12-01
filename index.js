@@ -72,7 +72,8 @@ function create(prop, args) {
      */
 
     if (!app._wildCardEmitter) {
-      app._wildCardEmitter = true;
+      app.define('_wildCardEmitter', true);
+
       app[prop].keys.forEach(function(name) {
         app.on(name, function(key, val) {
           app.emit('*', name, key, val);
