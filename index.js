@@ -71,18 +71,21 @@ function create(prop, args) {
      * Create wildcard emitter
      */
 
-    app[prop].keys.forEach(function(name) {
-      app.on(name, function(key, val) {
-        app.emit('*', name, key, val);
-      });
-    });
-
-    if (app.store) {
-      app.store[prop].keys.forEach(function(name) {
-        app.store.on(name, function(key, val) {
-          app.emit('*', 'store.' + name, key, val);
+    if (!app._wildCardEmitter) {
+      app._wildCardEmitter = true;
+      app[prop].keys.forEach(function(name) {
+        app.on(name, function(key, val) {
+          app.emit('*', name, key, val);
         });
       });
+
+      if (app.store) {
+        app.store[prop].keys.forEach(function(name) {
+          app.store.on(name, function(key, val) {
+            app.emit('*', 'store.' + name, key, val);
+          });
+        });
+      }
     }
 
     app[prop].process = function (val) {
