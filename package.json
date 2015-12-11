@@ -38,7 +38,7 @@
     "gulp-istanbul": "^0.10.2",
     "gulp-mocha": "^2.2.0",
     "minimist": "^1.2.0",
-    "mocha": "^2.3.4"
+    "mocha": "*"
   },
   "keywords": [
     "app",
@@ -67,6 +67,9 @@
         "base-plugins",
         "base-store"
       ]
-    }
+    },
+    "reflinks": [
+      "base-methods"
+    ]
   }
 }
