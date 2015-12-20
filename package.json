@@ -22,16 +22,16 @@
   },
   "dependencies": {
     "isobject": "^2.0.0",
-    "lazy-cache": "^0.2.4",
+    "lazy-cache": "^1.0.3",
     "map-config": "^0.3.0",
     "resolve-dir": "^0.1.0"
   },
   "devDependencies": {
     "base-data": "^0.3.3",
-    "base-methods": "^0.5.0",
+    "base-methods": "^0.6.2",
     "base-options": "^0.5.4",
     "base-plugins": "^0.4.1",
-    "base-store": "^0.2.0",
+    "base-store": "^0.3.2",
     "expand-args": "^0.3.0",
     "gulp": "^3.9.0",
     "gulp-eslint": "^1.1.0",
@@ -70,6 +70,9 @@
     },
     "reflinks": [
       "base-methods"
+    ],
+    "plugins": [
+      "gulp-format-md"
     ]
   }
 }
