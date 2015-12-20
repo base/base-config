@@ -53,7 +53,12 @@ function tryRequire(name) {
  */
 
 utils.arrayify = function(val) {
-  if (typeof val === 'string') return val.split(',');
+  if (typeof val === 'undefined' || val === null || val === '') {
+    return [];
+  }
+  if (typeof val === 'string') {
+    return val.split(',');
+  }
   return Array.isArray(val) ? val : [val];
 };
 
