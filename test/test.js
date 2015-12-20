@@ -165,46 +165,13 @@ describe('config', function() {
       });
     });
 
-    it('should process an object passed to config', function(cb) {
+    it('should use the `is` flag on the options to check the instance name', function() {
       app = base();
       app.use(plugins());
       app.use(options());
       app.use(store('base-config-tests'));
-      app.use(config({
-        option: {
-          a: 'b'
-        }
-      }));
-
-      app.on('option', function(key, val) {
-        assert(key);
-        assert(key === 'a');
-        assert(val === 'b');
-        cb();
-      });
-
-      app.config.process();
-    });
-
-    it('should process an array passed to config', function(cb) {
-      app = base();
-      app.use(plugins());
-      app.use(options());
-      app.use(store('base-config-tests'));
-      app.use(config([{
-        option: {
-          a: 'b'
-        }
-      }]));
-
-      app.on('option', function(key, val) {
-        assert(key);
-        assert(key === 'a');
-        assert(val === 'b');
-        cb();
-      });
-
-      app.config.process();
+      app.use(config({is: 'isApp'}));
+      assert(!app.config);
     });
 
     it('should be chainable', function(cb) {

@@ -13,8 +13,8 @@ var utils = require('./utils');
  * Expose `config`
  */
 
-module.exports = function(args) {
-  return create('config', args);
+module.exports = function(options) {
+  return create('config', options);
 };
 
 /**
@@ -27,13 +27,23 @@ module.exports = function(args) {
  * @api public
  */
 
-function create(prop, args) {
+function create(prop, options) {
   if (typeof prop !== 'string') {
     throw new Error('expected the first argument to be a string.');
   }
 
+  options = options || {};
+
   return function(app) {
-    var config = utils.mapper(app)
+    if (typeof options.is === 'string') {
+      if (!app[options.is]) return;
+    }
+
+    // emit the plugin for debugging
+    app.emit('plugin', prop, app, options);
+
+    // map config
+    var config = utils.mapper(app, options)
       .alias('options', 'option')
       .map('option')
       .map('data')
@@ -89,29 +99,30 @@ function create(prop, args) {
       }
     }
 
-    app[prop].process = function (val) {
-      args = utils.arrayify(args).concat(val || []);
+    app[prop].process = function (args) {
+      args = utils.arrayify(args);
       args.forEach(function(arg) {
-        config.process(arg);
+        if (arg) config.process(arg);
       });
     };
   };
 
   function store(app) {
     if (!app) return {};
-    var config = utils.mapper(app)
+    var mapper = utils.mapper(app)
       .map('set')
       .map('del')
       .map('has')
       .map('hasOwn')
       .map('get');
 
-    app.define(prop, proxy(config));
+    app.define(prop, proxy(mapper));
     return function(argv) {
-      config.process(argv);
-    };
+      mapper.process(argv);
+    }
   }
 }
+
 
 /**
  * Proxy to support `app.config` as a function or object
