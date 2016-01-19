@@ -35,6 +35,8 @@ function create(prop, options) {
   options = options || {};
 
   return function(app) {
+    if (this.isRegistered('base-' + prop)) return;
+
     if (typeof options.is === 'string') {
       if (!app[options.is]) return;
     }
