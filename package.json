@@ -39,7 +39,7 @@
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
     "minimist": "^1.2.0",
-    "mocha": "^2.3.4"
+    "mocha": "*"
   },
   "keywords": [
     "app",

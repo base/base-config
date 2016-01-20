@@ -56,12 +56,12 @@ function create(prop, options) {
       .map('enable')
       .map('disable')
       .map('has', function(prop) {
-        utils.arrayify(prop).forEach(function (key) {
+        utils.arrayify(prop).forEach(function(key) {
           app.has(key);
         });
       })
       .map('get', function(prop)  {
-        utils.arrayify(prop).forEach(function (key) {
+        utils.arrayify(prop).forEach(function(key) {
           app.get(key);
         });
       })
@@ -69,7 +69,7 @@ function create(prop, options) {
         app.set('options.cwd', cwd);
       })
       .map('use', function(names) {
-        utils.arrayify(names).forEach(function (name) {
+        utils.arrayify(names).forEach(function(name) {
           var cwd = app.get('options.cwd') || process.cwd();
           app.emit('use', name);
           app.use(utils.tryRequire(name, cwd));
@@ -109,7 +109,7 @@ function create(prop, options) {
      * (e.g. `app.config.process()`)
      */
 
-    app[prop].process = function (args) {
+    app[prop].process = function(args) {
       args = utils.arrayify(args);
       args.forEach(function(arg) {
         if (arg) config.process(arg);

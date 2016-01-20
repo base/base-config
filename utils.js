@@ -88,7 +88,7 @@ utils.tryRequire = function(name, cwd) {
 
 function format(arr) {
   var res = '';
-  arr.forEach(function (ele) {
+  arr.forEach(function(ele) {
     res += ele + '\'' + '\n';
   });
   return res;

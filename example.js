@@ -13,7 +13,7 @@ app.config({
   d: 'del'
 });
 
-app.on('set', function (val, key) {
+app.on('set', function(val, key) {
   console.log('set:', val, key);
 });
 
