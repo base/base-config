@@ -7,6 +7,7 @@
 
 'use strict';
 
+var path = require('path');
 var utils = require('./utils');
 
 /**
@@ -50,32 +51,34 @@ function create(prop, options) {
       .map('option')
       .map('data')
       .map('store', store(app.store))
-      .map('enable')
-      .map('enabled')
-      .map('disable')
-      .map('disabled')
-      .map('define')
       .map('set')
       .map('del')
-      .map('cwd', function(fp) {
-        app.set('cwd', fp);
-      })
+      .map('enable')
+      .map('disable')
       .map('has', function(prop) {
         utils.arrayify(prop).forEach(function (key) {
           app.has(key);
         });
       })
-      .map('get', function(prop) {
+      .map('get', function(prop)  {
         utils.arrayify(prop).forEach(function (key) {
           app.get(key);
         });
       })
+      .map('cwd', function(cwd) {
+        app.set('options.cwd', cwd);
+      })
       .map('use', function(names) {
         utils.arrayify(names).forEach(function (name) {
-          var cwd = app.get('cwd') || process.cwd();
+          var cwd = app.get('options.cwd') || process.cwd();
+          app.emit('use', name);
           app.use(utils.tryRequire(name, cwd));
         });
       });
+
+    /**
+     * Expose `prop` (config) on the instance
+     */
 
     app.define(prop, proxy(config));
 
@@ -101,6 +104,11 @@ function create(prop, options) {
       }
     }
 
+    /**
+     * Expose `process` on app[prop]
+     * (e.g. `app.config.process()`)
+     */
+
     app[prop].process = function (args) {
       args = utils.arrayify(args);
       args.forEach(function(arg) {
@@ -112,11 +120,9 @@ function create(prop, options) {
   function store(app) {
     if (!app) return {};
     var mapper = utils.mapper(app)
+      .map('get')
       .map('set')
       .map('del')
-      .map('has')
-      .map('hasOwn')
-      .map('get');
 
     app.define(prop, proxy(mapper));
     return function(argv) {

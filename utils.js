@@ -83,17 +83,17 @@ utils.tryRequire = function(name, cwd) {
   attempts.push(fp);
   res = tryRequire(fp);
   if (res) return res;
-
   throw new Error('cannot find plugin at: \n' + format(attempts));
 };
 
 function format(arr) {
   var res = '';
   arr.forEach(function (ele) {
-    res += ' ✖ \'' + ele + '\'' + '\n';
+    res += ele + '\'' + '\n';
   });
   return res;
 }
+
 /**
  * Expose `utils` modules
  */

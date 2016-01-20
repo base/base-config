@@ -3,8 +3,8 @@
 require('mocha');
 var assert = require('assert');
 var minimist = require('minimist');
+var base = require('base');
 var store = require('base-store');
-var base = require('base-methods');
 var data = require('base-data');
 var plugins = require('base-plugins');
 var options = require('base-options');
@@ -67,7 +67,7 @@ describe('config', function() {
     it('should set a cwd on app', function(cb) {
       app.on('set', function(key, val) {
         assert(key);
-        assert(key === 'cwd');
+        assert(key === 'options.cwd');
         assert(val === process.cwd());
         cb();
       });
@@ -75,6 +75,30 @@ describe('config', function() {
       app.config.process({
         cwd: process.cwd()
       });
+    });
+  });
+
+  describe('use errors', function() {
+    beforeEach(function() {
+      app = base();
+      app.use(plugins());
+      app.use(store('base-config-tests'));
+      app.use(config());
+    });
+
+    it.skip('should throw an error when plugin is not found', function(cb) {
+      try {
+        app.config.process({
+          cwd: 'test/fixtures/plugins',
+          use: 'dddd'
+        });
+        cb(new Error('expected an error'));
+      } catch (err) {
+        assert(err);
+        assert(err.message);
+        assert(/cannot find plugin/.test(err.message));
+        cb();
+      }
     });
   });
 
@@ -97,47 +121,26 @@ describe('config', function() {
     });
 
     it('should use a plugin from a cwd', function(cb) {
-      var n = 0;
-      app.on('use', function(key, val) {
-        n++;
+      app.once('use', function(key, val) {
+        cb();
       });
 
       app.config.process({
         cwd: 'test/fixtures/plugins',
-        use: 'a'
+        use: ['a', 'b']
       });
-      assert(n === 1);
-      cb();
-    });
-
-    it('should throw an error when plugin is not found', function(cb) {
-      try {
-        app.config.process({
-          cwd: 'test/fixtures/plugins',
-          use: 'dddd'
-        });
-        assert(new Error('expected an error'));
-      } catch (err) {
-        assert(err);
-        assert(err.message);
-        assert(/cannot find/.test(err.message));
-        cb();
-      }
     });
 
     it('should use an array of plugins from a cwd', function(cb) {
-      var n = 0;
-      app.on('use', function() {
-        n++;
+      app.once('use', function(key) {
+        assert(key === 'a');
+        cb();
       });
 
       app.config.process({
         cwd: 'test/fixtures/plugins',
         use: 'a,b,c'
       });
-
-      assert(n === 3);
-      cb();
     });
   });
 
@@ -211,6 +214,8 @@ describe('config', function() {
         assert(key === 'a');
         assert(val === 'b');
         called++;
+        assert(called === 2);
+        cb();
       });
 
       app.config.process({
@@ -219,8 +224,6 @@ describe('config', function() {
         },
         get: 'a'
       });
-      assert(called === 2);
-      cb();
     });
   });
 
@@ -261,6 +264,8 @@ describe('config', function() {
         assert(key === 'a');
         assert(val === 'b');
         called++;
+        assert(called === 2);
+        cb();
       });
 
       app.store.config.process({
@@ -269,8 +274,6 @@ describe('config', function() {
         },
         bar: 'a'
       });
-      assert(called === 2);
-      cb();
     });
 
     it('should work as a function', function(cb) {
@@ -293,16 +296,15 @@ describe('config', function() {
         assert(key === 'a');
         assert(val === 'b');
         called++;
+
+        assert(called === 2);
+        cb();
       });
 
       app.store.config.process({
-        foo: {
-          a: 'b'
-        },
+        foo: {a: 'b'},
         bar: 'a'
       });
-      assert(called === 2);
-      cb();
     });
   });
 

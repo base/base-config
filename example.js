@@ -1,6 +1,6 @@
 'use strict';
 
-var base = require('base-methods');
+var base = require('base');
 var config = require('./');
 
 var app = base()
