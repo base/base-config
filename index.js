@@ -71,44 +71,14 @@ function create(prop, options) {
       .map('use', function(names) {
         utils.arrayify(names).forEach(function(name) {
           var cwd = app.get('options.cwd') || process.cwd();
-          app.emit('use', name);
           app.use(utils.tryRequire(name, cwd));
         });
       });
 
-    /**
-     * Expose `prop` (config) on the instance
-     */
-
+    // Expose `prop` (config) on the instance
     app.define(prop, proxy(config));
 
-    /**
-     * Create wildcard emitter
-     */
-
-    if (!app._wildCardEmitter) {
-      app.define('_wildCardEmitter', true);
-
-      app[prop].keys.forEach(function(name) {
-        app.on(name, function(key, val) {
-          app.emit('*', name, key, val);
-        });
-      });
-
-      if (app.store) {
-        app.store[prop].keys.forEach(function(name) {
-          app.store.on(name, function(key, val) {
-            app.emit('*', 'store.' + name, key, val);
-          });
-        });
-      }
-    }
-
-    /**
-     * Expose `process` on app[prop]
-     * (e.g. `app.config.process()`)
-     */
-
+    // Expose `process` on app[prop]
     app[prop].process = config.process;
   };
 
@@ -120,9 +90,7 @@ function create(prop, options) {
       .map('del')
 
     app.define(prop, proxy(mapper));
-    return function(argv) {
-      mapper.process(argv);
-    }
+    return mapper;
   }
 }
 
