@@ -109,12 +109,7 @@ function create(prop, options) {
      * (e.g. `app.config.process()`)
      */
 
-    app[prop].process = function(args) {
-      args = utils.arrayify(args);
-      args.forEach(function(arg) {
-        if (arg) config.process(arg);
-      });
-    };
+    app[prop].process = config.process;
   };
 
   function store(app) {
