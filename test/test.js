@@ -132,14 +132,20 @@ describe('config', function() {
     });
 
     it('should use an array of plugins from a cwd', function(cb) {
-      app.once('use', function(key) {
-        assert(key === 'a');
-        cb();
+      var arr = [];
+      // test plugins emit `test`
+      app.on('test', function(key) {
+        arr.push(key);
       });
 
       app.config.process({
         cwd: 'test/fixtures/plugins',
         use: 'a,b,c'
+      }, function(err) {
+        if (err) return cb(err);
+        assert.equal(arr.length, 3);
+        assert.deepEqual(arr, ['AAA', 'BBB', 'CCC']);
+        cb();
       });
     });
   });
@@ -572,30 +578,6 @@ describe('events', function() {
         assert(Object.keys(app.store.data).length === 0);
       });
       cb();
-    });
-  });
-
-  describe('wildcard', function() {
-    it('should emit the wildcard event for "set"', function(cb) {
-      app.once('*', function(name, key, val) {
-        assert.equal(name, 'set');
-        assert.equal(key, 'x');
-        assert.equal(val, 'y');
-        cb();
-      });
-
-      app.set('x', 'y');
-    });
-
-    it('should emit the wildcard event for "store.set"', function(cb) {
-      app.once('*', function(name, key, val) {
-        assert.equal(name, 'store.set');
-        assert.equal(key, 'x');
-        assert.equal(val, 'y');
-        cb();
-      });
-
-      app.store.set('x', 'y');
     });
   });
 });
