@@ -41,12 +41,16 @@ require = fn;
  * Try to require a module, fail silently if not found.
  */
 
-function tryRequire(name) {
+utils.tryRequire = function tryRequire(name, cwd) {
+  try {
+    cwd = cwd || process.cwd();
+    return require(path.resolve(cwd, name));
+  } catch (err) {};
   try {
     return require(name);
   } catch (err) {};
   return null;
-}
+};
 
 /**
  * Cast the given value to an array
@@ -60,30 +64,6 @@ utils.arrayify = function(val) {
     return val.split(',');
   }
   return Array.isArray(val) ? val : [val];
-};
-
-/**
- * Try to require the given module
- * or file path.
- */
-
-utils.tryRequire = function(name, cwd) {
-  name = utils.resolve(name);
-  var attempts = [name];
-
-  var res = tryRequire(name);
-  if (res) return res;
-
-  var fp = path.resolve(name);
-  attempts.push(fp);
-  res = tryRequire(fp);
-  if (res) return res;
-
-  fp = path.resolve(utils.resolve(cwd), name);
-  attempts.push(fp);
-  res = tryRequire(fp);
-  if (res) return res;
-  throw new Error('cannot find plugin at: \n' + format(attempts));
 };
 
 function format(arr) {
