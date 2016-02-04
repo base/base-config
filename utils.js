@@ -1,12 +1,6 @@
 'use strict';
 
 var path = require('path');
-
-/**
- * Lazily-required module dependencies (makes the application
- * faster)
- */
-
 var utils = require('lazy-cache')(require);
 var fn = require;
 require = utils;
@@ -24,7 +18,7 @@ require = fn;
  * Try to require a module, fail silently if not found.
  */
 
-utils.tryRequire = function tryRequire(name, cwd) {
+utils.tryRequire = function(name, cwd) {
   try {
     return require(name);
   } catch (err) {};

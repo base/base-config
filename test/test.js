@@ -7,7 +7,7 @@ var base = require('base');
 var store = require('base-store');
 var data = require('base-data');
 var plugins = require('base-plugins');
-var options = require('base-options');
+var options = require('base-option');
 var expandArgs = require('expand-args');
 var config = require('..');
 var app;
