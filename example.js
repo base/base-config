@@ -1,5 +1,7 @@
 'use strict';
 
+var argv = require('minimist')(process.argv.slice(2));
+var expand = require('expand-args');
 var base = require('base');
 var config = require('./');
 
@@ -18,6 +20,9 @@ app.on('set', function(val, key) {
 });
 
 // pass a config object to process.
-app.config.process({s: {a: 'b', c: 'd'}});
 // (we can be creative! this could be an object
 // from package.json, argv, config store, etc!)
+// app.config.process({s: {a: 'b', c: 'd'}});
+app.config.process(expand(argv), function(err) {
+  if (err) throw err;
+});
