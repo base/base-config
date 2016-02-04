@@ -7,7 +7,6 @@
 
 'use strict';
 
-var path = require('path');
 var utils = require('./utils');
 
 /**
@@ -38,35 +37,36 @@ function create(prop, options) {
   return function(app) {
     if (this.isRegistered('base-' + prop)) return;
 
-    if (typeof options.is === 'string') {
-      if (!app[options.is]) return;
-    }
-
-    // emit the plugin for debugging
-    app.emit('plugin', prop, app, options);
-
     // map config
     var config = utils.mapper(app, options)
-      .alias('options', 'option')
-      .map('option')
-      .map('data')
+      // store/data
       .map('store', store(app.store))
-      .map('set')
-      .map('del')
+      .map('data')
+
+      // options
       .map('enable')
       .map('disable')
+      .map('option')
+      .alias('options', 'option')
+
+      // get/set
+      .map('set')
+      .map('del')
+      .map('get', function(prop) {
+        utils.arrayify(prop).forEach(function(key) {
+          app.get(key);
+        });
+      })
       .map('has', function(prop) {
         utils.arrayify(prop).forEach(function(key) {
           app.has(key);
         });
       })
-      .map('get', function(prop)  {
-        utils.arrayify(prop).forEach(function(key) {
-          app.get(key);
-        });
-      })
+
+      // other
       .map('cwd', function(cwd) {
         app.set('options.cwd', cwd);
+        app.emit('option', 'cwd', cwd);
       })
       .map('use', function(names) {
         utils.arrayify(names).forEach(function(name) {
@@ -87,13 +87,12 @@ function create(prop, options) {
     var mapper = utils.mapper(app)
       .map('get')
       .map('set')
-      .map('del')
+      .map('del');
 
     app.define(prop, proxy(mapper));
     return mapper;
   }
 }
-
 
 /**
  * Proxy to support `app.config` as a function or object
