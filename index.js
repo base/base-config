@@ -13,8 +13,8 @@ var utils = require('./utils');
  * Expose `config`
  */
 
-module.exports = function(options) {
-  return create('config', options);
+module.exports = function() {
+  return create('config');
 };
 
 /**
@@ -27,18 +27,16 @@ module.exports = function(options) {
  * @api public
  */
 
-function create(prop, options) {
+function create(prop) {
   if (typeof prop !== 'string') {
     throw new Error('expected the first argument to be a string.');
   }
-
-  options = options || {};
 
   return function(app) {
     if (this.isRegistered('base-' + prop)) return;
 
     // map config
-    var config = utils.mapper(app, options)
+    var config = utils.mapper(app)
       // store/data
       .map('store', store(app.store))
       .map('data')
