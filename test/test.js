@@ -507,6 +507,14 @@ describe('events', function() {
   });
 
   describe('store', function() {
+    beforeEach(function() {
+      app.config.store
+        .map('set')
+        .map('get')
+        .map('del');
+
+    });
+
     it('should emit a store.set event', function(cb) {
       var argv = expand(['--store.set=a:b']);
       app.store.on('set', function(key, val) {

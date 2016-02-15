@@ -82,11 +82,7 @@ function create(prop) {
 
   function store(app) {
     if (!app) return {};
-    var mapper = utils.mapper(app)
-      .map('get')
-      .map('set')
-      .map('del');
-
+    var mapper = utils.mapper(app);
     app.define(prop, proxy(mapper));
     return mapper;
   }
