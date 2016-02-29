@@ -153,19 +153,6 @@ describe('base-config', function() {
       app.use(config());
     });
 
-    it('should process an object of flags', function(cb) {
-      app.on('option', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process({option: {a: 'b'}}, function(err) {
-        if (err) return cb(err);
-      });
-    });
-
     it('should be chainable', function(cb) {
       app.config.alias('a', 'b')
         .alias('b', 'c')
@@ -221,70 +208,6 @@ describe('base-config', function() {
       var foo = base();
       foo.use(config());
       assert.equal(typeof foo.store, 'undefined');
-    });
-
-    it('should add properties to app.store.config.config', function(cb) {
-      app.store.config.alias('foo', 'set');
-      app.store.config.alias('bar', 'get');
-      var called = 0;
-
-      app.store.on('set', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        called++;
-      });
-
-      app.store.on('get', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        called++;
-        assert.equal(called, 2);
-        cb();
-      });
-
-      app.store.config.process({
-        foo: {
-          a: 'b'
-        },
-        bar: 'a'
-      }, function(err) {
-        if (err) return cb(err);
-      });
-    });
-
-    it('should work as a function', function(cb) {
-      app.store.config({
-        foo: 'set',
-        bar: 'get'
-      });
-
-      var called = 0;
-
-      app.store.on('set', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        called++;
-      });
-
-      app.store.on('get', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        called++;
-
-        assert.equal(called, 2);
-        cb();
-      });
-
-      app.store.config.process({
-        foo: {a: 'b'},
-        bar: 'a'
-      }, function(err) {
-        if (err) return cb(err);
-      });
     });
   });
 
@@ -471,123 +394,6 @@ describe('events', function() {
       });
     });
   });
-
-  describe('option', function() {
-    it('should emit an option event', function(cb) {
-      var argv = expand(['--option=a:b']);
-
-      app.on('option', function(key, val) {
-        assert(key);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
-    });
-  });
-
-  describe('data', function() {
-    it('should emit a data event', function(cb) {
-      var argv = expand(['--data=a:b']);
-
-      app.on('data', function(args) {
-        assert(Array.isArray(args));
-        assert.equal(args.length, 1);
-        assert.equal(args[0].a, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
-    });
-  });
-
-  describe('store', function() {
-    beforeEach(function() {
-      app.config.store
-        .map('set')
-        .map('get')
-        .map('del');
-
-    });
-
-    it('should emit a store.set event', function(cb) {
-      var argv = expand(['--store.set=a:b']);
-      app.store.on('set', function(key, val) {
-        assert(key);
-        assert(val);
-        assert.equal(app.store.data.a, 'b');
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
-    });
-
-    it('should emit a store.get event', function(cb) {
-      var argv = expand(['--store.get=a']);
-      app.store.set('a', 'b');
-
-      app.store.on('get', function(key, val) {
-        assert(key);
-        assert(val);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
-    });
-
-    it('should emit a store.del event', function(cb) {
-      var argv = expand(['--store.del=a,b']);
-      app.store.set('a', 'aaa');
-      app.store.set('b', 'bbb');
-      var keys = [];
-
-      app.store.on('del', function(key) {
-        keys.push(key);
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-        assert.equal(keys.length, 2);
-        process.nextTick(function() {
-          assert.equal(Object.keys(app.store.data).length, 2);
-        });
-        cb();
-      });
-    });
-
-    it('should delete the entire store', function(cb) {
-      var argv = expand(['--store.del=force:true']);
-      app.store.set('a', 'aaa');
-      app.store.set('b', 'bbb');
-      var keys = [];
-
-      app.store.on('del', function(key) {
-        keys.push(key);
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-        assert.equal(keys.length, 2);
-        process.nextTick(function() {
-          assert.equal(Object.keys(app.store.data).length, 0);
-        });
-        cb();
-      });
-    });
-  });
 });
 
 describe('aliases', function() {
@@ -603,42 +409,6 @@ describe('aliases', function() {
   afterEach(function() {
     app.store.del({
       force: true
-    });
-  });
-
-  describe('options', function() {
-    it('should emit an option event', function(cb) {
-      var argv = expand(['--options=a:b']);
-
-      app.on('option', function(key, val) {
-        assert(key);
-        assert(val);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
-    });
-  });
-
-  describe('option', function() {
-    it('should emit an option event', function(cb) {
-      var argv = expand(['--option=a:b']);
-
-      app.on('option', function(key, val) {
-        assert(key);
-        assert(val);
-        assert.equal(key, 'a');
-        assert.equal(val, 'b');
-        cb();
-      });
-
-      app.config.process(argv, function(err) {
-        if (err) return cb(err);
-      });
     });
   });
 

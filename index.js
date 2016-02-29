@@ -52,12 +52,12 @@ function create(prop) {
       .map('del')
       .map('get', function(prop) {
         utils.arrayify(prop).forEach(function(key) {
-          app.get(key);
+          console.log(key, app.get(key));
         });
       })
       .map('has', function(prop) {
         utils.arrayify(prop).forEach(function(key) {
-          app.has(key);
+          console.log(key, app.has(key));
         });
       })
 
