@@ -22,10 +22,7 @@ utils.tryRequire = function(name, cwd) {
   try {
     return require(name);
   } catch (err) {};
-
-  try {
-    return require(path.resolve(cwd || process.cwd(), name));
-  } catch (err) {};
+  return require(path.resolve(cwd || process.cwd(), name));
 };
 
 /**

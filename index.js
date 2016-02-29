@@ -1,7 +1,7 @@
 /*!
  * base-config <https://github.com/jonschlinkert/base-config>
  *
- * Copyright (c) 2015, Jon Schlinkert.
+ * Copyright (c) 2015-2016, Jon Schlinkert.
  * Licensed under the MIT License.
  */
 
@@ -50,28 +50,6 @@ function create(prop) {
       // get/set
       .map('set')
       .map('del')
-      .map('get', function(prop) {
-        utils.arrayify(prop).forEach(function(key) {
-          console.log(key, app.get(key));
-        });
-      })
-      .map('has', function(prop) {
-        utils.arrayify(prop).forEach(function(key) {
-          console.log(key, app.has(key));
-        });
-      })
-
-      // other
-      .map('cwd', function(cwd) {
-        app.set('options.cwd', cwd);
-        app.emit('option', 'cwd', cwd);
-      })
-      .map('use', function(names) {
-        utils.arrayify(names).forEach(function(name) {
-          var cwd = app.get('options.cwd') || process.cwd();
-          app.use(utils.tryRequire(name, cwd));
-        });
-      });
 
     // Expose `prop` (config) on the instance
     app.define(prop, proxy(config));
