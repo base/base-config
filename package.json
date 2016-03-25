@@ -2,11 +2,11 @@
   "name": "base-config",
   "description": "base-methods plugin that adds a `config` method for mapping declarative configuration values to other 'base' methods or custom functions.",
   "version": "0.5.0",
-  "homepage": "https://github.com/jonschlinkert/base-config",
+  "homepage": "https://github.com/node-base/base-config",
   "author": "Jon Schlinkert (https://github.com/jonschlinkert)",
-  "repository": "jonschlinkert/base-config",
+  "repository": "node-base/base-config",
   "bugs": {
-    "url": "https://github.com/jonschlinkert/base-config/issues"
+    "url": "https://github.com/node-base/base-config/issues"
   },
   "license": "MIT",
   "files": [
@@ -39,7 +39,7 @@
     "gulp-istanbul": "^0.10.3",
     "gulp-mocha": "^2.2.0",
     "minimist": "^1.2.0",
-    "mocha": "^2.4.5"
+    "mocha": "*"
   },
   "keywords": [
     "app",
@@ -59,15 +59,6 @@
     "store"
   ],
   "verb": {
-    "run": true,
-    "toc": false,
-    "layout": "default",
-    "tasks": [
-      "readme"
-    ],
-    "plugins": [
-      "gulp-format-md"
-    ],
     "related": {
       "list": [
         "base",
@@ -78,6 +69,15 @@
         "base-store"
       ]
     },
+    "run": true,
+    "toc": false,
+    "layout": "default",
+    "tasks": [
+      "readme"
+    ],
+    "plugins": [
+      "gulp-format-md"
+    ],
     "reflinks": [
       "verb"
     ],
